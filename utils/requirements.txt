@@ -1,0 +1,5 @@
+pyautogui
+keyboard
+pydirectinput
+pysspm_rhythia
+numpy
