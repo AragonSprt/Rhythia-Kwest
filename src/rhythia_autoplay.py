@@ -281,9 +281,14 @@ def calibrate(cfg: dict) -> dict:
 #  AUDIO LOOPBACK SYNC  (WASAPI, Windows)
 # ═════════════════════════════════════════════════════════════════════════════
 
+# Device name fragments that identify a loopback/virtual audio input.
+# Add more entries here if you use a different virtual cable product.
+_LOOPBACK_HINTS = ("loopback", "cable output", "stereo mix", "wave out mix")
+
 def find_loopback_device() -> int | None:
     """
-    Search for a WASAPI loopback input device that mirrors system audio output.
+    Search for a WASAPI input device that mirrors system audio output.
+    Matches by checking if any hint string appears in the lowercase device name.
     Returns the sounddevice device index, or None if not found.
     """
     if not AUDIO_SYNC_AVAILABLE:
@@ -298,22 +303,19 @@ def find_loopback_device() -> int | None:
             return None
 
         for i, dev in enumerate(sd.query_devices()):
-            if dev["hostapi"] == wasapi_idx and dev["max_input_channels"] > 0:
-                if "loopback" in dev["name"].lower():
-                    return i
+            if dev["hostapi"] != wasapi_idx:
+                continue
+            if dev["max_input_channels"] < 1:
+                continue
+            name_lower = dev["name"].lower()
+            if any(hint in name_lower for hint in _LOOPBACK_HINTS):
+                return i
     except Exception:
         pass
     return None
 
 
 def wait_for_audio(stop_event: threading.Event, cfg: dict) -> float | None:
-    """
-    Block until system audio is detected via WASAPI loopback, or until
-    stop_event is set or the timeout expires.
-
-    Returns time.perf_counter() at the exact moment audio was first detected,
-    or None if detection failed / timed out.
-    """
     device_idx = find_loopback_device()
     if device_idx is None:
         return None
@@ -321,8 +323,38 @@ def wait_for_audio(stop_event: threading.Event, cfg: dict) -> float | None:
     threshold = cfg.get("audio_threshold", 0.01)
     timeout   = cfg.get("audio_timeout",   60)
 
+    # Query the device's native sample rate instead of assuming 44100
+    device_info = sd.query_devices(device_idx)
+    samplerate  = int(device_info["default_samplerate"])
+
     detected_at    = [None]
     detected_event = threading.Event()
+
+    def _callback(indata, frames, time_info, status):
+        if detected_event.is_set() or stop_event.is_set():
+            raise sd.CallbackStop()
+        rms = float(np.sqrt(np.mean(indata.astype(np.float32) ** 2)))
+        if rms > threshold:
+            detected_at[0] = time.perf_counter()
+            detected_event.set()
+            raise sd.CallbackStop()
+
+    try:
+        with sd.InputStream(
+            device=device_idx,
+            channels=1,
+            samplerate=samplerate,   # ← uses the device's own rate
+            blocksize=512,
+            callback=_callback,
+        ):
+            print(c(f"  [AUDIO] Listening on '{device_info['name']}' @ {samplerate} Hz...", DIM))
+            print(c("  Press F3 to abort.", DIM))
+            detected_event.wait(timeout=timeout)
+    except Exception as e:
+        print(c(f"  [AUDIO] Stream error: {e}", YELLOW))
+        return None
+
+    return detected_at[0]
 
     def _callback(indata, frames, time_info, status):
         if detected_event.is_set() or stop_event.is_set():
@@ -664,7 +696,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# TODO: rewrite the code & README.md for version 1.1.1 -> Audio Handling; New Calibration System; Note hitting problem fix
