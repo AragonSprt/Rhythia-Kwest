@@ -1,0 +1,58 @@
+{
+  "cell_centers": [
+    [
+      [
+        705,
+        347
+      ],
+      [
+        942,
+        345
+      ],
+      [
+        1197,
+        344
+      ]
+    ],
+    [
+      [
+        700,
+        594
+      ],
+      [
+        951,
+        586
+      ],
+      [
+        1193,
+        592
+      ]
+    ],
+    [
+      [
+        707,
+        834
+      ],
+      [
+        950,
+        837
+      ],
+      [
+        1193,
+        834
+      ]
+    ]
+  ],
+  "grid_left": 700,
+  "grid_top": 344,
+  "grid_width": 497,
+  "grid_height": 493,
+  "offset_ms": 0,
+  "audio_threshold": 0.01,
+  "audio_timeout": 60,
+  "countdown": 5,
+  "move_duration": 0.0,
+  "quit_key": "f3",
+  "pause_key": "escape",
+  "dpi_aware_calibrated": true
+}
