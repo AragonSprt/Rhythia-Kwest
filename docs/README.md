@@ -33,26 +33,29 @@ Loads any `.sspm` (Sound Space Plus Map) file using the `pysspm-rhythia` library
 ### Grid Calibration Wizard
 On first launch or when passed the `--calibrate` flag, a wizard guides you through aligning the bot to your screen.
 
-### Pause & Resume
-You can press **ESC** to pause, then **ESC** again to resume.
+### DirectInput Mouse Control
+Mouse movement and clicks are performed via `pydirectinput`, which is better than `Pyautogui` as it bypasses the Windows message queue.
 
-### Audio Handling
-The bot will automatically play the map's audio track when it starts.
+### Pause & Resume
+You can press **ESC** to pause and ress **ESC** again to resume.
 
 ### Emergency Stop
 If your PC is about to blow up, press **F3** at any time to immediately exit the tool.
 
 ### Live Progress Bar
-A progress bar is printed to the terminal showing percentage completion and the raw note counter
+A compact progress bar is printed to the terminal showing percentage completion and the raw note counter
 
-### Configuration
-All settings are stored in `utils/rhythia_config.json`. Manual edits to this file are respected on the next launch. Running `--calibrate` overwrites only the grid coordinates.
+### Persistent Configuration
+All settings (grid position, timing offset, countdown duration, hotkeys) are stored in `utils/rhythia_config.json`. Manual edits to this file are respected on the next launch. Running `--calibrate` overwrites only the grid coordinates.
 
 ---
 ## Changelog
 - **v-1.0.0** - Initial release.
-- **v-pre-1.1.1** - Added audio handling and remaking of calibration system
-- **v-1.1.1** - *Coming soon...*
+- **v-pre-1.1.1** - Added audio handling and remaking of calibration system.
+- **v1.1.1** - Modularized code and added QoL feature.
+- **v1.1.2** - *Coming soon*.
+
+
 ## Requirements
 
 - **Python 3.10+**
@@ -92,13 +95,11 @@ pip install -r utils/requirements.txt
 ---
 
 ## Usage
-> [!WARNING]
-> >Inside Rhythia, change mouse settings from **"Relative"** to **"Absolute"** or else the tool will **NOT** work.
 
 ### First run (calibration required)
 
 ```bash
-python rhythia_autoplay.py path/to/map.sspm
+python -m rhythia_autoplay runs/example.sspm --example_flag
 ```
 
 On the first launch, the calibration wizard starts automatically.
@@ -106,29 +107,29 @@ On the first launch, the calibration wizard starts automatically.
 ### Standard playback
 
 ```bash
-python rhythia_autoplay.py "runs/my_map.sspm"
+python -m rhythia_autoplay runs/example.sspm --example_flag
 ```
 
 ### Force re-calibration
 
 ```bash
-python rhythia_autoplay.py "runs/my_map.sspm" --calibrate
+python -m rhythia_autoplay runs/example.sspm --calibrate
 ```
 
 ### Apply a timing offset
 
 ```bash
 # Delay all notes by 50 ms
-python rhythia_autoplay.py "runs/my_map.sspm" --offset 50
+python -m rhythia_autoplay runs/example.sspm --offset 50
 
 # Fire all notes 30 ms earlier
-python rhythia_autoplay.py "runs/my_map.sspm" --offset -30
+python -m rhythia_autoplay runs/example.sspm --offset -30
 ```
 
 ### Override the countdown
 
 ```bash
-python rhythia_autoplay.py "runs/my_map.sspm" --countdown 3
+python -m rhythia_autoplay runs/example.sspm --countdown 3
 ```
 
 ---
@@ -143,7 +144,4 @@ python rhythia_autoplay.py "runs/my_map.sspm" --countdown 3
 
 ---
 
-<br>
-
-## Built by AragonSpirit
-## ***v-pre-1.1.1***
+## Built by AragonSpirit - v1.1.1
