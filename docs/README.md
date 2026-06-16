@@ -97,6 +97,9 @@ pip install -r utils/requirements.txt
 
 ## Usage
 
+> [!WARNING]
+> Careful! Inside Rhythia, you should change the Cursor settings from Relative to Absolute or else the bot WILL NOT work. Feel free to change back and forth between the two modes for when you use the tool.
+
 ### First run (calibration required)
 
 ```bash
