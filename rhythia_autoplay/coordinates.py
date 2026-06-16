@@ -1,4 +1,3 @@
-
 def note_to_screen(x: float, y: float, cfg: dict) -> tuple[int, int]:
     """
     Convert an SSPM note coordinate (x, y) to screen pixel coordinates.

@@ -36,6 +36,13 @@ DEFAULT_CONFIG: dict = {
     # Hotkeys
     "quit_key":  "f3",
     "pause_key": "escape",
+
+    # Humanization settings (autoplay smoothness)
+    "human_note_radius": 30,
+    "human_jitter_sigma_ms": 5.0,
+    "human_offset_pct_range": [0.5, 2.0],
+    "human_wobble_amp": 2.0,
+    "human_wobble_freq": 8.0,
 }
 
 

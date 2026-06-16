@@ -35,7 +35,7 @@ def _print_banner() -> None:
     print(c("  ╚════╝██╔═██╗ ██║███╗██║██╔══╝  ╚════██║   ██║   ", CYAN))
     print(c("        ██║  ██╗╚███╔███╔╝███████╗███████║   ██║   ", CYAN))
     print(c("        ╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝  ", CYAN))
-    print(c("                     -Built by AragonSpirit | v1.1.2", BOLD))
+    print(c("                     -Built by AragonSpirit | v1.2.0", BOLD))
     print()
 
 

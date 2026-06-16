@@ -54,7 +54,7 @@ All settings (grid position, timing offset, countdown duration, hotkeys) are sto
 - **v-pre-1.1.1** - Added audio handling and remaking of the calibration system.
 - **v1.1.1** - Modularized code and added QoL feature.
 - **v1.1.2** - A speed flag has been added to the playback command.
-- **v1.2.0** - *Coming soon*
+- **v1.2.0** - **Human mode has been added!** Your replay now looks way more human and will make you less likely to get banned.
  
 
 ## Requirements
@@ -145,4 +145,4 @@ python -m rhythia_autoplay runs/example.sspm --countdown 3
 
 ---
 
-## Built by AragonSpirit - v1.1.2
+## Built by AragonSpirit - v1.2.0

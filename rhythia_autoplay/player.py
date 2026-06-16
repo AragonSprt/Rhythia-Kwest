@@ -8,6 +8,7 @@ import pydirectinput
 from .audio import AUDIO_SYNC_AVAILABLE, find_loopback_device, wait_for_audio
 from .constants import BOLD, DIM, GREEN, RED, YELLOW, c
 from .coordinates import note_to_screen
+from .human_movement import HumanizedCursor
 
 
 class AutoPlayer:
@@ -19,12 +20,25 @@ class AutoPlayer:
         self._paused_at = 0.0
         self._pause_elapsed = 0.0
 
+        # Humanization settings (with fallbacks)
+        self.human_cfg = {
+            'note_radius': cfg.get('human_note_radius', 30),
+            'jitter_sigma_ms': cfg.get('human_jitter_sigma_ms', 5.0),
+            'offset_percent_range': tuple(cfg.get('human_offset_pct_range', [0.5, 2.0])),
+            'wobble_amplitude': cfg.get('human_wobble_amp', 2.0),
+            'wobble_freq': cfg.get('human_wobble_freq', 8.0),
+        }
+        self.humanizer = HumanizedCursor(**self.human_cfg)
+        self._movement_thread = None
+
+        # Keyboard hotkeys – must come after methods are defined in the class
         keyboard.add_hotkey(cfg["quit_key"],  self._on_quit,  suppress=True)
         keyboard.add_hotkey(cfg["pause_key"], self._on_pause, suppress=True)
 
         pyautogui.FAILSAFE = True
         pyautogui.PAUSE    = 0
 
+    # ---- Hotkey callbacks ----
     def _on_quit(self) -> None:
         print(c("\n  [F3] Emergency stop!", RED))
         self._stop.set()
@@ -43,6 +57,7 @@ class AutoPlayer:
             self._pause.set()
             print(c("  [ESC] Paused — press ESC again to resume.", YELLOW))
 
+    # ---- Timing helper ----
     def _wait_until(self, target_perf: float) -> bool:
         """
         Sleep until *target_perf* (a perf_counter value), accounting for any
@@ -59,6 +74,7 @@ class AutoPlayer:
                 return True
             time.sleep(min(remaining, 0.005))
 
+    # ---- Audio sync ----
     def _sync_audio(self) -> float | None:
         """
         Try to auto-detect song start via WASAPI loopback.
@@ -100,30 +116,26 @@ class AutoPlayer:
         print(c("  GO!                  ", GREEN))
         return time.perf_counter()
 
-    def run(self, use_audio_sync: bool = True, speed: float = 1.0) -> None:
-        """
-        Play the map.
+    # ---- Movement thread ----
+    def _movement_loop(self):
+        """Continuously update the mouse position from the humanizer."""
+        while not self._stop.is_set():
+            if self._pause.is_set():
+                time.sleep(0.01)
+                continue
+            pos = self.humanizer.get_position()
+            if pos is not None:
+                pydirectinput.moveTo(int(pos[0]), int(pos[1]))
+            time.sleep(0.004)   # ~250 Hz
 
-        Parameters
-        ----------
-        use_audio_sync : bool
-            When True, attempt WASAPI loopback detection before falling back
-            to the countdown timer.
-        speed : float
-            Playback speed multiplier.  Must match the in-game speed you set
-            in Rhythia before starting the map.
-            - 1.0  → normal speed (default)
-            - 0.75 → 75 % speed  (slower, notes fire later)
-            - 1.5  → 150 % speed (faster, notes fire earlier)
-            Note timestamps are divided by this value, so the bot fires each
-            click proportionally sooner or later.
-        """
+    # ---- Main entry point ----
+    def run(self, use_audio_sync: bool = True, speed: float = 1.0) -> None:
         if speed <= 0:
             raise ValueError(f"speed must be > 0, got {speed}")
 
         offset_s = self.cfg["offset_ms"] / 1000.0
 
-        # Determine t=0 (the moment the song begins).
+        # Audio sync or countdown
         start = None
         if use_audio_sync:
             start = self._sync_audio()
@@ -134,34 +146,66 @@ class AutoPlayer:
         if start is None or self._stop.is_set():
             return
 
-        # Playback loop.
-        total  = len(self.notes)
+        # Start the movement thread
+        self._movement_thread = threading.Thread(target=self._movement_loop, daemon=True)
+        self._movement_thread.start()
+
+        total = len(self.notes)
         played = 0
 
-        for x, y, ms in self.notes:
+        # Capture current cursor for the first movement plan
+        start_pos = pyautogui.position()
+
+        for i, (x, y, ms) in enumerate(self.notes):
             if self._stop.is_set():
                 break
 
-            # Divide the note timestamp by the speed multiplier so that at 2×
-            # a note originally at t=1000 ms fires at t=500 ms, etc.
-            target_perf = start + (ms / 1000.0 / speed) + offset_s
+            # Compute jittered hit time
+            base_target = start + (ms / 1000.0 / speed) + offset_s
+            jitter_ms = self.humanizer.compute_jitter()
+            target_perf = base_target + jitter_ms / 1000.0
+
+            # Convert note coordinate to screen pixel
+            note_px = note_to_screen(x, y, self.cfg)
+
+            # Plan the movement curve (start now, end at jittered hit time)
+            self.humanizer.plan_move(
+                start_pos=start_pos,
+                target_note_pos=note_px,
+                start_time=time.perf_counter(),
+                end_time=target_perf
+            )
+
+            # Wait until the exact jittered moment
             if not self._wait_until(target_perf):
                 break
 
-            px, py = note_to_screen(x, y, self.cfg)
-            pydirectinput.moveTo(px, py, duration=self.cfg["move_duration"])
+            # Click at that instant
             pydirectinput.click()
-
             played += 1
+
+            # Update position for the next movement
+            start_pos = pyautogui.position()
+
             if played % 50 == 0 or played == total:
                 pct = played / total * 100
                 bar = ("█" * int(pct // 5)).ljust(20)
                 print(c(f"  [{bar}] {pct:5.1f}%  ({played}/{total})", DIM),
                       end="\r", flush=True)
 
+        # Cleanup
+        self._stop.set()
+        if self._movement_thread and self._movement_thread.is_alive():
+            self._movement_thread.join(timeout=0.5)
         keyboard.remove_all_hotkeys()
         print()
-        if self._stop.is_set():
+        if self._stop.is_set() and played < total:
             print(c("\n  Stopped early.", YELLOW))
         else:
             print(c("\n  Map complete! ✓", GREEN))
+
+        # Cleanup
+        self._stop.set()
+        if self._movement_thread and self._movement_thread.is_alive():
+            self._movement_thread.join(timeout=0.5)
+        keyboard.remove_all_hotkeys()
