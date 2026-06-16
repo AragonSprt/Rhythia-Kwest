@@ -1,6 +1,6 @@
 # Rhythia Kwest
 
-> An autoplay bot for [Rhythia](https://rhythia.com/) that reads native `.sspm` map files and executes the notes in real-time.
+> An autoplay bot for [Rhythia](https://rhythia.com/) that reads `.sspm` map files and executes the notes.
 
 ---
 
