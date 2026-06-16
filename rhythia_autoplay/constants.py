@@ -1,9 +1,4 @@
-
-#  CONSTANTS
-#  Shared colors, grid labels, and difficulty table used across all modules.
-
-
-# --- ANSI colour codes ---
+# --- Color codes ---
 RESET  = "\033[0m"
 BOLD   = "\033[1m"
 DIM    = "\033[2m"

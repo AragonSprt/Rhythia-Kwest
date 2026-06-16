@@ -1,9 +1,3 @@
-
-#  ENTRY POINT
-#  Parses CLI arguments, prints the banner, runs calibration if needed,
-#  loads the map, and launches the AutoPlayer.
-
-
 import argparse
 import os
 import sys
@@ -41,7 +35,7 @@ def _print_banner() -> None:
     print(c("  ╚════╝██╔═██╗ ██║███╗██║██╔══╝  ╚════██║   ██║   ", CYAN))
     print(c("        ██║  ██╗╚███╔███╔╝███████╗███████║   ██║   ", CYAN))
     print(c("        ╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚══════╝   ╚═╝  ", CYAN))
-    print(c("                     -Built by AragonSpirit | v1.1.1", BOLD))
+    print(c("                     -Built by AragonSpirit | v1.1.2", BOLD))
     print()
 
 
@@ -67,6 +61,9 @@ def main() -> None:
                         help="Override fallback countdown duration in seconds")
     parser.add_argument("--threshold", type=float, default=None, metavar="RMS",
                         help="Override audio detection sensitivity (default 0.01)")
+    parser.add_argument("--speed", type=float, default=1.0, metavar="X",
+                        help="Playback speed multiplier, must match the in-game speed "
+                             "(e.g. 0.75 for 75%%, 1.5 for 150%%; default: 1.0)")
     args = parser.parse_args()
 
     _print_banner()
@@ -76,6 +73,10 @@ def main() -> None:
     if args.offset    is not None: cfg["offset_ms"]      = args.offset
     if args.countdown is not None: cfg["countdown"]       = args.countdown
     if args.threshold is not None: cfg["audio_threshold"] = args.threshold
+
+    if args.speed <= 0:
+        print(c(f"\n  [ERROR] --speed must be greater than 0 (got {args.speed}).", RED))
+        sys.exit(1)
 
     # --- Calibration ---
     needs_calib = not os.path.exists(CONFIG_FILE) or not cfg.get("cell_centers")
@@ -124,6 +125,7 @@ def main() -> None:
     print(c(f"    Calibration  : {calib_pts} / 9 points captured", DIM))
     print(c(f"    Audio sync   : {audio_status}", DIM))
     print(c(f"    Timing offset: {cfg['offset_ms']} ms", DIM))
+    print(c(f"    Speed        : {args.speed}x", DIM))
     print(c(f"    Quit: F3  |  Pause / Resume: ESC", DIM))
     print()
 
@@ -137,7 +139,7 @@ def main() -> None:
     # --- Run ---
     player = AutoPlayer(notes, cfg)
     try:
-        player.run(use_audio_sync=not args.no_audio_sync)
+        player.run(use_audio_sync=not args.no_audio_sync, speed=args.speed)
     except KeyboardInterrupt:
         print(c("\n  Interrupted via Ctrl+C.", YELLOW))
     except pyautogui.FailSafeException:

@@ -1,8 +1,3 @@
-
-#  9-POINT CALIBRATION
-#  Interactive wizard that captures the pixel center of each grid cell.
-
-
 import pyautogui
 
 from .constants import BOLD, DIM, GREEN, YELLOW, CELL_LABELS, GRID_DIAGRAM, c

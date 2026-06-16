@@ -1,9 +1,3 @@
-
-#  AUTO-PLAYER
-#  Handles hotkeys, precise timing (with pause support), sync strategies,
-#  and the main per-note click loop.
-
-
 import threading
 import time
 
@@ -106,7 +100,27 @@ class AutoPlayer:
         print(c("  GO!                  ", GREEN))
         return time.perf_counter()
 
-    def run(self, use_audio_sync: bool = True) -> None:
+    def run(self, use_audio_sync: bool = True, speed: float = 1.0) -> None:
+        """
+        Play the map.
+
+        Parameters
+        ----------
+        use_audio_sync : bool
+            When True, attempt WASAPI loopback detection before falling back
+            to the countdown timer.
+        speed : float
+            Playback speed multiplier.  Must match the in-game speed you set
+            in Rhythia before starting the map.
+            - 1.0  → normal speed (default)
+            - 0.75 → 75 % speed  (slower, notes fire later)
+            - 1.5  → 150 % speed (faster, notes fire earlier)
+            Note timestamps are divided by this value, so the bot fires each
+            click proportionally sooner or later.
+        """
+        if speed <= 0:
+            raise ValueError(f"speed must be > 0, got {speed}")
+
         offset_s = self.cfg["offset_ms"] / 1000.0
 
         # Determine t=0 (the moment the song begins).
@@ -128,7 +142,9 @@ class AutoPlayer:
             if self._stop.is_set():
                 break
 
-            target_perf = start + (ms / 1000.0) + offset_s
+            # Divide the note timestamp by the speed multiplier so that at 2×
+            # a note originally at t=1000 ms fires at t=500 ms, etc.
+            target_perf = start + (ms / 1000.0 / speed) + offset_s
             if not self._wait_until(target_perf):
                 break
 

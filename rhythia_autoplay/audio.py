@@ -1,9 +1,3 @@
-
-#  AUDIO LOOPBACK SYNC (WASAPI, Windows)
-#  Detects song start by monitoring system audio via a loopback device.
-#  sounddevice is optional - all public symbols degrade if absent.
-
-
 import threading
 import time
 

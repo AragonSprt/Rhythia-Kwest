@@ -23,7 +23,7 @@ Live progress bar:
 ## Features
 
 ### Map Parsing
-Loads any `.sspm` (Sound Space Plus Map) file using the `pysspm-rhythia` library, showing:
+Loads any `.sspm` (Sound Space Plus Map) file, showing:
 - Map name and mapper(s)
 - Difficulty rating
 - Total note count
@@ -33,8 +33,8 @@ Loads any `.sspm` (Sound Space Plus Map) file using the `pysspm-rhythia` library
 ### Grid Calibration Wizard
 On first launch or when passed the `--calibrate` flag, a wizard guides you through aligning the bot to your screen.
 
-### DirectInput Mouse Control
-Mouse movement and clicks are performed via `pydirectinput`, which is better than `Pyautogui` as it bypasses the Windows message queue.
+### Speed Adjustment
+When executing the command, you can pass the flag `--speed` to adjust the speed of the playback to your desired one.
 
 ### Pause & Resume
 You can press **ESC** to pause and ress **ESC** again to resume.
@@ -51,10 +51,11 @@ All settings (grid position, timing offset, countdown duration, hotkeys) are sto
 ---
 ## Changelog
 - **v-1.0.0** - Initial release.
-- **v-pre-1.1.1** - Added audio handling and remaking of calibration system.
+- **v-pre-1.1.1** - Added audio handling and remaking of the calibration system.
 - **v1.1.1** - Modularized code and added QoL feature.
-- **v1.1.2** - *Coming soon*.
-
+- **v1.1.2** - A speed flag has been added to the playback command.
+- **v1.2.0** - *Coming soon*
+ 
 
 ## Requirements
 
@@ -144,4 +145,4 @@ python -m rhythia_autoplay runs/example.sspm --countdown 3
 
 ---
 
-## Built by AragonSpirit - v1.1.1
+## Built by AragonSpirit - v1.1.2

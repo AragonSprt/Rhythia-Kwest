@@ -1,8 +1,3 @@
-
-#  CONFIG
-#  Manages the persistent JSON configuration file.
-
-
 import json
 import os
 

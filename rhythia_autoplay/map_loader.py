@@ -1,8 +1,3 @@
-
-#  MAP LOADER
-#  Reads an SSPM file and returns a sorted list of (x, y, ms) note tuples.
-
-
 import sys
 
 import pysspm_rhythia

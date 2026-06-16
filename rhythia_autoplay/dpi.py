@@ -1,8 +1,3 @@
-
-#  DPI AWARENESS
-#  Must be called before any coordinate is read or written.
-
-
 import ctypes
 
 
